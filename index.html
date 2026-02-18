@@ -1,421 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduFlow</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh}
+        .container{max-width:1200px;margin:0 auto;padding:20px}
+        .card{background:rgba(255,255,255,0.95);padding:25px;border-radius:15px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+        header{background:rgba(255,255,255,0.95);padding:20px;border-radius:15px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
+        .logo{font-size:28px;font-weight:bold;color:#667eea}
+        button{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;margin:5px}
+        .btn-primary{background:#667eea;color:white}
+        .btn-success{background:#28a745;color:white}
+        .btn-danger{background:#dc3545;color:white}
+        .btn-warning{background:#ffc107;color:#212529}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+        .turma-card{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;border-radius:12px;cursor:pointer}
+        .hidden{display:none!important}
+        input,select,textarea{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;margin:5px 0}
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000}
+        .modal-content{background:white;padding:30px;border-radius:15px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+        table{width:100%;border-collapse:collapse;margin-top:15px}
+        th,td{padding:12px;text-align:left;border-bottom:1px solid #ddd}
+        th{background:#667eea;color:white}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px}
+        .stat-card{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;border-radius:12px;text-align:center}
+        .login-mode{display:flex;gap:20px;justify-content:center;margin-bottom:30px;flex-wrap:wrap}
+        .mode-option{padding:20px 40px;border:3px solid #e0e0e0;border-radius:15px;cursor:pointer;text-align:center}
+        .mode-option.selected{border-color:#667eea;background:#f0f4ff}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="tela-login" class="card" style="max-width:800px;margin:50px auto;text-align:center">
+            <h2>🎓 Bem-vindo ao EduFlow</h2>
+            <p style="color:#666;margin:20px 0">Escolha como deseja acessar</p>
+            <div class="login-mode">
+                <div class="mode-option" onclick="selecionarModo('aluno',this)">
+                    <div style="font-size:40px">👨‍🎓</div>
+                    <h3>Modo Aluno</h3>
+                </div>
+                <div class="mode-option" onclick="selecionarModo('professor',this)">
+                    <div style="font-size:40px">👨‍🏫</div>
+                    <h3>Modo Professor</h3>
+                </div>
+            </div>
+            <div id="senha-section" class="hidden" style="max-width:300px;margin:0 auto">
+                <input type="password" id="senha-input" placeholder="Digite a senha">
+                <button class="btn-primary" onclick="verificarSenha()" style="width:100%;margin-top:10px">Acessar</button>
+                <p id="senha-erro" style="color:#dc3545;display:none;margin-top:10px">Senha incorreta!</p>
+            </div>
+        </div>
 
-import json
+        <div id="dashboard" class="hidden">
+            <header>
+                <div class="logo">🎓 EduFlow</div>
+                <div>
+                    <span id="modo-atual" style="margin-right:15px;color:#666"></span>
+                    <button class="btn-primary" onclick="mostrarTurmas()">Turmas</button>
+                    <button class="btn-success" onclick="mostrarAtividades()">Atividades</button>
+                    <button class="btn-warning" onclick="exportarDados()">Exportar</button>
+                    <button class="btn-danger" onclick="sair()">Sair</button>
+                </div>
+            </header>
+            <div class="stats">
+                <div class="stat-card"><h3 id="total-turmas">0</h3><p>Turmas</p></div>
+                <div class="stat-card"><h3 id="total-alunos">0</h3><p>Alunos</p></div>
+                <div class="stat-card"><h3 id="total-atividades">0</h3><p>Atividades</p></div>
+            </div>
+            <div id="conteudo"></div>
+        </div>
+    </div>
 
-# Carregar os dados do arquivo JSON
-data = {
-  "turmas": [
-    {
-      "id": "1771429568776",
-      "nome": "101",
-      "alunos": [
-        {"id": 0, "nome": "ACKSON MIGUEL MACÊDO DE SOUSA", "iniciais": "AM"},
-        {"id": 1, "nome": "ANA LIVIA CAVALCANTE DE MELO", "iniciais": "AL"},
-        {"id": 2, "nome": "ANNA VICTHORIA BEZERRA DE SOUZA", "iniciais": "AV"},
-        {"id": 3, "nome": "ANTONIO OLIVEIRA DE SOUZA", "iniciais": "AO"},
-        {"id": 4, "nome": "ARTHUR CARVALHO DOS SANTOS", "iniciais": "AC"},
-        {"id": 5, "nome": "CAUÃ VICTOR FERNANDES SALES", "iniciais": "CV"},
-        {"id": 6, "nome": "DENISE DUARTE DE SOUSA", "iniciais": "DD"},
-        {"id": 7, "nome": "ELLOAH VICTORIA DE CARVALH", "iniciais": "EV"},
-        {"id": 8, "nome": "EMERSON BATISTA ALVES", "iniciais": "EB"},
-        {"id": 9, "nome": "EMILLY VITÓRIA DE SOUSA GONÇALVES", "iniciais": "EV"},
-        {"id": 10, "nome": "FRANCISCO BARROS DE MORAIS", "iniciais": "FB"},
-        {"id": 11, "nome": "GRAZIELLA GOMES COSTA MENESES", "iniciais": "GG"},
-        {"id": 12, "nome": "GUILHERME OLIVEIRA DA SILVA", "iniciais": "GO"},
-        {"id": 13, "nome": "HUAM EMMANUELL INÁCIO FELIX MACEDO", "iniciais": "HE"},
-        {"id": 14, "nome": "ICARO FERNANDES DE SOUZA SANTOS", "iniciais": "IF"},
-        {"id": 15, "nome": "ISABELA CASTRO MEDEIROS", "iniciais": "IC"},
-        {"id": 16, "nome": "ISABELLA LARANGEIRA RODRIGUES", "iniciais": "IL"},
-        {"id": 17, "nome": "JOSÉ DANIEL DE OLIVEIRA PAZ", "iniciais": "JD"},
-        {"id": 18, "nome": "JOYCE NIKELLY SILVA SOUSA", "iniciais": "JN"},
-        {"id": 19, "nome": "JUAN LUCAS DA SILVA GOMES", "iniciais": "JL"},
-        {"id": 20, "nome": "KASSIANO PACHECO DO NASCIMENTO", "iniciais": "KP"},
-        {"id": 21, "nome": "KAYLA GABRYELE DA SILVA REIS", "iniciais": "KG"},
-        {"id": 22, "nome": "LAIS PEREIRA DA SILVA", "iniciais": "LP"},
-        {"id": 23, "nome": "LUCYANNA GABRYELLY R.DOS S. SILVA", "iniciais": "LG"},
-        {"id": 24, "nome": "LUIZ FILIPE FERREIRA BATISTA", "iniciais": "LF"},
-        {"id": 25, "nome": "MARIA CLARA DA SILVA RODRIGUES", "iniciais": "MC"},
-        {"id": 26, "nome": "MARIA CLARA DE SOUZA MACEDO", "iniciais": "MC"},
-        {"id": 27, "nome": "MARIA CLARA MENDES VIEIRA R. DA SILVA", "iniciais": "MC"},
-        {"id": 28, "nome": "MARIA EDUARDA FEITOSA SILVA", "iniciais": "ME"},
-        {"id": 29, "nome": "MIRELLY CRISTINNY DO N. OLIVEIRA", "iniciais": "MC"},
-        {"id": 30, "nome": "NYLMARA NYCOLY ALVES DE SOUSA", "iniciais": "NN"},
-        {"id": 31, "nome": "PEDRO MORAES DE CARVALHO JUNIOR", "iniciais": "PM"},
-        {"id": 32, "nome": "SAYURE VICTORIA COSTA LEAL", "iniciais": "SV"}
-      ]
-    },
-    {
-      "id": "1771429747670",
-      "nome": "102",
-      "alunos": [
-        {"id": 0, "nome": "ALANNA DIAS MUNIZ MORAES", "iniciais": "AD"},
-        {"id": 1, "nome": "ANA CLARA DE SOUSA CASTRO", "iniciais": "AC"},
-        {"id": 2, "nome": "ANDRE ALVES DE SOUSA", "iniciais": "AA"},
-        {"id": 3, "nome": "DAVI EMANUEL ROCHA CASTRO", "iniciais": "DE"},
-        {"id": 4, "nome": "DOUGLAS DE SOUZA SILVA", "iniciais": "DD"},
-        {"id": 5, "nome": "EMILY YASMIM FERREIRA SALES", "iniciais": "EY"},
-        {"id": 6, "nome": "FABRICIA DOS SANTOS NASCIMENTO", "iniciais": "FD"},
-        {"id": 7, "nome": "IAGO DA SILVA SOUZA", "iniciais": "ID"},
-        {"id": 8, "nome": "ILLA RAVENNA MARTINS SOARES", "iniciais": "IR"},
-        {"id": 9, "nome": "ISABELA DE OLIVEIRA SILVA DA ROCHA", "iniciais": "ID"},
-        {"id": 10, "nome": "JOSÉ GABRIEL CASSEMIRO ALMEIDA", "iniciais": "JG"},
-        {"id": 11, "nome": "KÁREN JOKAS SANTANA RODRIGUES", "iniciais": "KJ"},
-        {"id": 12, "nome": "KAWANE IZABELA VELOZO VIANA", "iniciais": "KI"},
-        {"id": 13, "nome": "KAYKE OLIVEIRA BARBOSA", "iniciais": "KO"},
-        {"id": 14, "nome": "LUIS EDUARDO DIAS OLIVEIRA", "iniciais": "LE"},
-        {"id": 15, "nome": "MARIA CLARA AVELINO SIQUEIRA", "iniciais": "MC"},
-        {"id": 16, "nome": "MARIA CLARA DE OLIVEIRA SOUZA", "iniciais": "MC"},
-        {"id": 17, "nome": "MARIA EDUARDA DE OLIVEIRA SOUZA", "iniciais": "ME"},
-        {"id": 18, "nome": "MARIA EDUARDA RODRIGUES DOS SANTOS", "iniciais": "ME"},
-        {"id": 19, "nome": "MIRYAN AVELINO DO NASCIMENTO", "iniciais": "MA"},
-        {"id": 20, "nome": "MOISÉS SARAIVA DA SILVA PENHA", "iniciais": "MS"},
-        {"id": 21, "nome": "NYCOLAS DA SILVA LASEVICIUS", "iniciais": "ND"},
-        {"id": 22, "nome": "PEDRO VICTOR DE SOUSA LOPES", "iniciais": "PV"},
-        {"id": 23, "nome": "RAQUEL FERREIRA COSTA", "iniciais": "RF"},
-        {"id": 24, "nome": "RIANNY GABRIELLY DA SILVA FEITOSA", "iniciais": "RG"},
-        {"id": 25, "nome": "SAMILA NICOLE MARCELINO ALVES", "iniciais": "SN"},
-        {"id": 26, "nome": "SANDRYELSON SILVA DE AZEVEDO", "iniciais": "SS"},
-        {"id": 27, "nome": "SAUL JHONATAS DA SILVA OLIVEIRA", "iniciais": "SJ"},
-        {"id": 28, "nome": "TALISSON VICTOR M. DOS S. OLIVEIRA", "iniciais": "TV"},
-        {"id": 29, "nome": "THAYNÁ MARIA SOUSA SILVA", "iniciais": "TM"},
-        {"id": 30, "nome": "THAYNARA DE JESUS SANTANA DA SILVA", "iniciais": "TD"},
-        {"id": 31, "nome": "YSABELLA FELLÍCYA ARAÚJO SOUSA", "iniciais": "YF"}
-      ]
-    },
-    {
-      "id": "1771429837620",
-      "nome": "103",
-      "alunos": [
-        {"id": 0, "nome": "ALEXANDRE KERLON VIEIRA DE OLIVEIRA", "iniciais": "AK"},
-        {"id": 1, "nome": "ANTONIO RANGEL SILVA MORAES", "iniciais": "AR"},
-        {"id": 2, "nome": "ARTHUR MARTINS NOLETO", "iniciais": "AM"},
-        {"id": 3, "nome": "ARTUR COSTA SOARES", "iniciais": "AC"},
-        {"id": 4, "nome": "DANIEL ALVES PEREIRA", "iniciais": "DA"},
-        {"id": 5, "nome": "DHEYVID RAWAN MELLO DA SILVA", "iniciais": "DR"},
-        {"id": 6, "nome": "EMILLY SOPHYA DE SOUSA MELO", "iniciais": "ES"},
-        {"id": 7, "nome": "ENZO VITAL DE SOUSA CAMÊLO", "iniciais": "EV"},
-        {"id": 8, "nome": "ERICK MARLEY SOUSA PIMENTEL", "iniciais": "EM"},
-        {"id": 9, "nome": "GUILHERME FERREIRA DOS SANTOS", "iniciais": "GF"},
-        {"id": 10, "nome": "IGOR SAMUK SILVA MOURA", "iniciais": "IS"},
-        {"id": 11, "nome": "IKARO CARVALHO FERREIRA DOS SANTOS", "iniciais": "IC"},
-        {"id": 12, "nome": "ISABELLA DA COSTA MACEDO", "iniciais": "ID"},
-        {"id": 13, "nome": "JHONATAN VIANA DE MOURA CARVALHO", "iniciais": "JV"},
-        {"id": 14, "nome": "JOÃO PEDRO NASCIMENTO SOUSA", "iniciais": "JP"},
-        {"id": 15, "nome": "JOAO WICTOR DA SILVA MUNIZ", "iniciais": "JW"},
-        {"id": 16, "nome": "JOSÉ RENATO DOS SANTOS DIAS", "iniciais": "JR"},
-        {"id": 17, "nome": "KARLA EMANUELLY NUNES COELHO", "iniciais": "KE"},
-        {"id": 18, "nome": "KAUAN LUCAS DE SOUSA MORAES", "iniciais": "KL"},
-        {"id": 19, "nome": "LANNA VITÓRIA PAIXÃO LIAL", "iniciais": "LV"},
-        {"id": 20, "nome": "LARA DA SILVA SOUSA", "iniciais": "LD"},
-        {"id": 21, "nome": "LEONARDO FELIX DAMASCENO", "iniciais": "LF"},
-        {"id": 22, "nome": "LEVÍ ELTON PEREIRA DA SILVA", "iniciais": "LE"},
-        {"id": 23, "nome": "LUIS ÓTAVIO CARREIRO MORAES", "iniciais": "LÓ"},
-        {"id": 24, "nome": "LUIS PHELIPE MORAIS LIMA DE SOUSA", "iniciais": "LP"},
-        {"id": 25, "nome": "MABILLY RAWENNA SOUSA SILVA", "iniciais": "MR"},
-        {"id": 26, "nome": "MATEUS BORGES ARAUJO", "iniciais": "MB"},
-        {"id": 27, "nome": "MATEUS SOUSA PEREIRA", "iniciais": "MS"},
-        {"id": 28, "nome": "MIQUEIAS DE SOUSA MENDES", "iniciais": "MD"},
-        {"id": 29, "nome": "NOSLEAM DOS SANTOS LUZ", "iniciais": "ND"},
-        {"id": 30, "nome": "PABLO MATHEUS ALVES FRANÇA", "iniciais": "PM"},
-        {"id": 31, "nome": "PEDRO HENRIQUE DE SOUSA NUNES", "iniciais": "PH"},
-        {"id": 32, "nome": "PEDRO HENRIQUE LIMA DE SOUSA", "iniciais": "PH"},
-        {"id": 33, "nome": "RAWAN MENDES DA ROCHA", "iniciais": "RM"},
-        {"id": 34, "nome": "RUAN LUCAS VELOSO SILVA", "iniciais": "RL"},
-        {"id": 35, "nome": "VANUSA DA SILVA OLIVEIRA", "iniciais": "VD"},
-        {"id": 36, "nome": "YCARO DE JESUS MESQUITA", "iniciais": "YD"}
-      ]
-    },
-    {
-      "id": "1771430022146",
-      "nome": "104",
-      "alunos": [
-        {"id": 0, "nome": "ALEXANDRE DE SOUSA LIMA", "iniciais": "AD"},
-        {"id": 1, "nome": "ANA CAROLINE RODRIGUES GONCALVES", "iniciais": "AC"},
-        {"id": 2, "nome": "ANA CLARA LOPES SANTOS", "iniciais": "AC"},
-        {"id": 3, "nome": "BIANCA MESQUITA DOS REIS", "iniciais": "BM"},
-        {"id": 4, "nome": "BRUNO HENRIQUE DE SOUSA RODRIGUES", "iniciais": "BH"},
-        {"id": 5, "nome": "CAMILA NASCIMENTO DA SILVA", "iniciais": "CN"},
-        {"id": 6, "nome": "CARLOS EDUARDO DE SOUSA", "iniciais": "CE"},
-        {"id": 7, "nome": "CLARA EDUARDA DE SOUSA PINTO", "iniciais": "CE"},
-        {"id": 8, "nome": "ELLOARA JENNYFER DA SILVA CARVALHO", "iniciais": "EJ"},
-        {"id": 9, "nome": "ELOA VITORIA DE LIMA SILVA", "iniciais": "EV"},
-        {"id": 10, "nome": "EMYLY RAMONA SOUSA SILVA", "iniciais": "ER"},
-        {"id": 11, "nome": "ERIC MACIEL DA SILVA", "iniciais": "EM"},
-        {"id": 12, "nome": "GABRIEL ARAUJO DA SILVA", "iniciais": "GA"},
-        {"id": 13, "nome": "HENRIQUE RODRIGUES DA S. CAVALCANTE", "iniciais": "HR"},
-        {"id": 14, "nome": "HIAGO LIMA DE OLIVEIRA", "iniciais": "HL"},
-        {"id": 15, "nome": "IURY SILVA SOARES", "iniciais": "IS"},
-        {"id": 16, "nome": "IZADORA DA SILVA GONZAGA", "iniciais": "ID"},
-        {"id": 17, "nome": "JÔNATAS GABRYEL FERREIRA DA SILVA", "iniciais": "JG"},
-        {"id": 18, "nome": "JOSEILTON IRINEU DA SILVA JORGE", "iniciais": "JI"},
-        {"id": 19, "nome": "LARA EVELEN SOUSA DO NASCIMENTO", "iniciais": "LE"},
-        {"id": 20, "nome": "LÉO HENRIQUE VIEIRA DA COSTA", "iniciais": "LH"},
-        {"id": 21, "nome": "LUCAS EDUARDO NUNES CAVALCANTE", "iniciais": "LE"},
-        {"id": 22, "nome": "MARIA CLARA BORGES FERREIRA", "iniciais": "MC"},
-        {"id": 23, "nome": "MARIA FERNANDA SANTOS DA S. CAETANO", "iniciais": "MF"},
-        {"id": 24, "nome": "MARIA FRANCIELLE MUNIZ MONTEIRO", "iniciais": "MF"},
-        {"id": 25, "nome": "MARIA VITORIA FERREIRA DA ROCHA", "iniciais": "MV"},
-        {"id": 26, "nome": "MARIA VITORIA FERREIRA DA SILVA", "iniciais": "MV"},
-        {"id": 27, "nome": "MARYA CLARA OLIVEIRA PEREIRA", "iniciais": "MC"},
-        {"id": 28, "nome": "NYCOLAS COSTA CARDOSO", "iniciais": "NC"},
-        {"id": 29, "nome": "RAVENA MARIA MORAIS BEZERRA", "iniciais": "RM"},
-        {"id": 30, "nome": "RAYNARA DE SOUSA RODRIGUES", "iniciais": "RD"},
-        {"id": 31, "nome": "RAYSSA SOBRINHO DE SOUZA", "iniciais": "RS"},
-        {"id": 32, "nome": "SAMUEL DE SOUSA SILVA", "iniciais": "SD"},
-        {"id": 33, "nome": "THAYNA PEREIRA DOS SANTOS", "iniciais": "TP"},
-        {"id": 34, "nome": "VICTOR HUGO PEREIRA DE SOUSA RIBEIRO", "iniciais": "VH"}
-      ]
-    },
-    {
-      "id": "1771430160006",
-      "nome": "105",
-      "alunos": [
-        {"id": 0, "nome": "ALINNE DA SILVA LIMA", "iniciais": "AD"},
-        {"id": 1, "nome": "ANA KAROLINA MOREIRA MARTINS", "iniciais": "AK"},
-        {"id": 2, "nome": "ANA LUIZA BARROS LIMA", "iniciais": "AL"},
-        {"id": 3, "nome": "ANA VITÓRIA PEREIRA DE OLIVEIRA", "iniciais": "AV"},
-        {"id": 4, "nome": "ANGÉLICA CRYSLANNY DA C. DE SOUSA", "iniciais": "AC"},
-        {"id": 5, "nome": "ANNA BEATRIZ DAMASCENO DE OLIVEIRA", "iniciais": "AB"},
-        {"id": 6, "nome": "BEATRIZ NOVAIS DE OLIVEIRA", "iniciais": "BN"},
-        {"id": 7, "nome": "BRUNA RAFAELLA BORGES DA SILVA", "iniciais": "BR"},
-        {"id": 8, "nome": "CIBELLE DA SILVA LIMA", "iniciais": "CD"},
-        {"id": 9, "nome": "CLARA EVELIN MENDES DE ARAUJO", "iniciais": "CE"},
-        {"id": 10, "nome": "EMANNUELLA NOGUEIRA DA S. R. PEREIRA", "iniciais": "EN"},
-        {"id": 11, "nome": "ÉRIKA LORRANY RODRIGUES S. CONCEIÇÃO", "iniciais": "ÉL"},
-        {"id": 12, "nome": "FRANCISCA RAFAELLA S. DE AZEVEDO", "iniciais": "FR"},
-        {"id": 13, "nome": "GABRIELLI RODRIGUES DE CARVALHO", "iniciais": "GR"},
-        {"id": 14, "nome": "GEDSON SILVESTRE BATISTA BRITO", "iniciais": "GS"},
-        {"id": 15, "nome": "GERLLANY DE SOUSA MOREIRA", "iniciais": "GD"},
-        {"id": 16, "nome": "GRAZIELLY FAYNY DE SOUSA", "iniciais": "GF"},
-        {"id": 17, "nome": "GUSTAVO ARAUJO DA COSTA LIMA", "iniciais": "GA"},
-        {"id": 18, "nome": "HELOYSE RAYANE ALVES DOS SANTOS", "iniciais": "HR"},
-        {"id": 19, "nome": "JAQUELINE ALVES DE SOUSA", "iniciais": "JA"},
-        {"id": 20, "nome": "JOAO OLIVEIRA DE MORAES NETO", "iniciais": "JO"},
-        {"id": 21, "nome": "JOICY DE SOUSA FEITOSA VELOSO", "iniciais": "JD"},
-        {"id": 22, "nome": "KARITA CECILY C. QUIXABEIRA", "iniciais": "KC"},
-        {"id": 23, "nome": "KLARA LEAL SANTOS", "iniciais": "KL"},
-        {"id": 24, "nome": "LARAH VITTÓRIA RAMOS FEITOSA", "iniciais": "LV"},
-        {"id": 25, "nome": "LARISSA KELLY CARVALHO DOS SANTOS", "iniciais": "LK"},
-        {"id": 26, "nome": "LAURA OHANA DE SOUSA DA SILVA", "iniciais": "LO"},
-        {"id": 27, "nome": "LAYSA CAROLINNE MORAIS SALDANHA", "iniciais": "LC"},
-        {"id": 28, "nome": "LUAN VITOR LIMA ROCHA", "iniciais": "LV"},
-        {"id": 29, "nome": "LUCAS EMANUEL VEIRA DA COSTA", "iniciais": "LE"},
-        {"id": 30, "nome": "MANUELLI GUIMARÃES DE SOUSA", "iniciais": "MG"},
-        {"id": 31, "nome": "MARCILEYA RODRIGUES DA SILVA MACEDO", "iniciais": "MR"},
-        {"id": 32, "nome": "MARIA APARECIDA DA SILVA SOUSA", "iniciais": "MA"},
-        {"id": 33, "nome": "MARIA EDUARDA BRITO DA SILVA VIEIRA", "iniciais": "ME"},
-        {"id": 34, "nome": "MARIA SOLANGE DE SOUSA ANDRADE", "iniciais": "MS"},
-        {"id": 35, "nome": "MARIA VIVIANY PEREIRA DA SILVA", "iniciais": "MV"},
-        {"id": 36, "nome": "MARYA EDHUARDA DE SOUSA NEVES", "iniciais": "ME"},
-        {"id": 37, "nome": "MIRELLA CRISTINA DA SILVA SOUSA", "iniciais": "MC"},
-        {"id": 38, "nome": "NAYRA JACIELLE SILVA DE SOUZA", "iniciais": "NJ"},
-        {"id": 39, "nome": "PAULO HENRIQUE LEAL DE SA", "iniciais": "PH"},
-        {"id": 40, "nome": "PEDRO HENRIQUE BATISTA DA SILVA", "iniciais": "PH"},
-        {"id": 41, "nome": "PYÊTHRO KAUÊ DA SILVA", "iniciais": "PK"},
-        {"id": 42, "nome": "THIAGO MESQUITA DE CARVALHO", "iniciais": "TM"}
-      ]
-    },
-    {
-      "id": "1771430232891",
-      "nome": "106",
-      "alunos": [
-        {"id": 0, "nome": "AGDA NICOLE CENI DUARTE DA CUNHA", "iniciais": "AN"},
-        {"id": 1, "nome": "ALYCE RAQUEL FERREIRA DE SOUSA", "iniciais": "AR"},
-        {"id": 2, "nome": "ANA VITÓRIA DA SILVA MACÊDO", "iniciais": "AV"},
-        {"id": 3, "nome": "ANA VITÓRIA PEREIRA DE SOUSA", "iniciais": "AV"},
-        {"id": 4, "nome": "ANIVLIS RANIELLY DOS SANTOS SILVA", "iniciais": "AR"},
-        {"id": 5, "nome": "ANNY REBECA MEDEIROS REIS", "iniciais": "AR"},
-        {"id": 6, "nome": "BIANCA AVELINO ALVES", "iniciais": "BA"},
-        {"id": 7, "nome": "CARLOS EMANOEL PAZ OLIVEIRA", "iniciais": "CE"},
-        {"id": 8, "nome": "CLARA CECILYA MATOS SOBRINHO", "iniciais": "CC"},
-        {"id": 9, "nome": "DAVI MAXIMO VELOSO", "iniciais": "DM"},
-        {"id": 10, "nome": "EMILLY VITORIA MOURA MORAIS", "iniciais": "EV"},
-        {"id": 11, "nome": "EVELLYN NICOLE DA COSTA", "iniciais": "EN"},
-        {"id": 12, "nome": "FABRICIA DE CARVALHO FERREIRA", "iniciais": "FD"},
-        {"id": 13, "nome": "GABRIEL PEREIRA VIANA", "iniciais": "GP"},
-        {"id": 14, "nome": "GEANE DE SOUSA NOGUEIRA", "iniciais": "GD"},
-        {"id": 15, "nome": "GEOVANA RODRIGUES CASTRO SEVERO", "iniciais": "GR"},
-        {"id": 16, "nome": "GUSTAVO RODRIGUES PEREIRA", "iniciais": "GR"},
-        {"id": 17, "nome": "ISADORA DE ALMEIDA CHAVES DIAS", "iniciais": "ID"},
-        {"id": 18, "nome": "JAMILLY VITORIA LAURINDO DE SOUSA", "iniciais": "JV"},
-        {"id": 19, "nome": "JOÃO VICTOR BEZERRA ALVES", "iniciais": "JV"},
-        {"id": 20, "nome": "JULIANA MUNIZ DE SOUZA TORRES", "iniciais": "JM"},
-        {"id": 21, "nome": "KEILANE MORAIS DA SILVA", "iniciais": "KM"},
-        {"id": 22, "nome": "LARA RAFAELLA DA C. CLEMENTINO", "iniciais": "LR"},
-        {"id": 23, "nome": "LARISSA LISBOA FEITOSA", "iniciais": "LL"},
-        {"id": 24, "nome": "LAYLA WANESSA DA SILVA SANTANA", "iniciais": "LW"},
-        {"id": 25, "nome": "LUCIANA KAUANE BORGES SOUSA", "iniciais": "LK"},
-        {"id": 26, "nome": "MARIA CECILIA DA SILVA FERREIRA", "iniciais": "MC"},
-        {"id": 27, "nome": "MARIA GABRIELLY DE SOUSA FRANCO", "iniciais": "MG"},
-        {"id": 28, "nome": "MAYSA DA SILVA RODRIGUES", "iniciais": "MD"},
-        {"id": 29, "nome": "MELANIE FERREIRA CARNEIRO DA SILVA", "iniciais": "MF"},
-        {"id": 30, "nome": "NAUANE MESSIAS BARBOSA", "iniciais": "NM"},
-        {"id": 31, "nome": "PAULA KARINE SANTOS DE MATOS", "iniciais": "PK"},
-        {"id": 32, "nome": "PEDRO JADSON SOARES FRANÇA", "iniciais": "PJ"},
-        {"id": 33, "nome": "REJANE APARECIDA DE SOUSA RIBEIRO", "iniciais": "RA"},
-        {"id": 34, "nome": "RITA DE CÁSSIA C. DO NASCIMENTO", "iniciais": "RD"},
-        {"id": 35, "nome": "RONALDO OLIVEIRA TAVARES", "iniciais": "RO"},
-        {"id": 36, "nome": "SAFHIRA ALVES PEREIRA DOS S. CASTRO", "iniciais": "SA"},
-        {"id": 37, "nome": "SARAH FERREIRA RODRIGUES", "iniciais": "SF"},
-        {"id": 38, "nome": "VICTOR NUNES SOUSA", "iniciais": "VN"}
-      ]
-    },
-    {
-      "id": "1771430264310",
-      "nome": "107",
-      "alunos": [
-        {"id": 0, "nome": "ANA BEATRIZ DOS SANTOS CHAVES", "iniciais": "AB"},
-        {"id": 1, "nome": "AURÉLIA SILVA PEREIRA", "iniciais": "AS"},
-        {"id": 2, "nome": "CÉLLYO MICKAEL ARAÚJO DA COSTA", "iniciais": "CM"},
-        {"id": 3, "nome": "CLAUDIO VIEIRA BRANDÃO", "iniciais": "CV"},
-        {"id": 4, "nome": "DAVID OLIVEIRA SANTOS", "iniciais": "DO"},
-        {"id": 5, "nome": "EMERSON ALVES DA SILVA VIANA", "iniciais": "EA"},
-        {"id": 6, "nome": "ENYELLEN SILVA DE ALMEIDA", "iniciais": "ES"},
-        {"id": 7, "nome": "EVELLYN MARIA NOGUEIRA CLEMENTINO", "iniciais": "EM"},
-        {"id": 8, "nome": "FRANK WILLIAMIS ALVES F. CARNEIRO", "iniciais": "FW"},
-        {"id": 9, "nome": "GEOVANNA CAMELO DOS SANTOS", "iniciais": "GC"},
-        {"id": 10, "nome": "GRAZIELLE FERREIRA DE SA", "iniciais": "GF"},
-        {"id": 11, "nome": "ISABELA CRISTINA DE ALMEIDA SOUSA", "iniciais": "IC"},
-        {"id": 12, "nome": "JAMERSON BORGES FERREIRA", "iniciais": "JB"},
-        {"id": 13, "nome": "JOAO PEDRO FERREIRA DE SA", "iniciais": "JP"},
-        {"id": 14, "nome": "JOÃO PEDRO SANTANA MACHADO", "iniciais": "JP"},
-        {"id": 15, "nome": "JOSÉ BARBOSA DE MIRANDA NETO", "iniciais": "JB"},
-        {"id": 16, "nome": "JOSÉ DAVI GUIMARÃES GOMES CARDOSO", "iniciais": "JD"},
-        {"id": 17, "nome": "KAYO OLIVEIRA BARBOSA", "iniciais": "KO"},
-        {"id": 18, "nome": "KLEBSON VINICIUS DE SOUSA SILVA", "iniciais": "KV"},
-        {"id": 19, "nome": "LAUA SOUZA COSTA", "iniciais": "LS"},
-        {"id": 20, "nome": "LUIS GUILHERME ALVES DA SILVA", "iniciais": "LG"},
-        {"id": 21, "nome": "LUIS JACKSON SOUSA FERNANDES", "iniciais": "LJ"},
-        {"id": 22, "nome": "LUIZ GABRIEL RIBEIRO MARTINS", "iniciais": "LG"},
-        {"id": 23, "nome": "MANOEL SOUSA PIRES", "iniciais": "MS"},
-        {"id": 24, "nome": "MARCOS DIEGO G. DOS S. SOARES", "iniciais": "MD"},
-        {"id": 25, "nome": "MARCOS FELIPE VIEIRA RODRIGUES", "iniciais": "MF"},
-        {"id": 26, "nome": "MARCOS VENICYOS MINEIRO SARAIVA", "iniciais": "MV"},
-        {"id": 27, "nome": "MARIA NATHALIA BORGES DOS SANTOS", "iniciais": "MN"},
-        {"id": 28, "nome": "OTAVIO ALVES BENVINDO", "iniciais": "OA"},
-        {"id": 29, "nome": "RAMON FELIPE VIEIRA DE CARVALHO", "iniciais": "RF"},
-        {"id": 30, "nome": "RANGEL RODRIGUES DE SOUSA", "iniciais": "RR"},
-        {"id": 31, "nome": "RENAN RABELO SOUSA", "iniciais": "RR"},
-        {"id": 32, "nome": "SAMUEL JACKSON RODRIGUES C. DA SILVA", "iniciais": "SJ"},
-        {"id": 33, "nome": "SOFIA ALVES GUIMARÃES", "iniciais": "SA"},
-        {"id": 34, "nome": "YURY FERNANDO CARVALHO PIRES", "iniciais": "YF"}
-      ]
-    },
-    {
-      "id": "1771430296634",
-      "nome": "108",
-      "alunos": [
-        {"id": 0, "nome": "ALÍCYA LORRANI ROCHA PACHÊCO", "iniciais": "AL"},
-        {"id": 1, "nome": "ANA VITORIA SOUSA MARTINS", "iniciais": "AV"},
-        {"id": 2, "nome": "ANANDA SAWANY BRITO ALVES", "iniciais": "AS"},
-        {"id": 3, "nome": "BELNICE DUARTE BORGES", "iniciais": "BD"},
-        {"id": 4, "nome": "CAMILA SOUSA SANTOS", "iniciais": "CS"},
-        {"id": 5, "nome": "DANIEL HENRIQUE RODRIGUES CAMELO", "iniciais": "DH"},
-        {"id": 6, "nome": "DIEGO LEONEL DE PAULA SILVA", "iniciais": "DL"},
-        {"id": 7, "nome": "ENZO GABRIEL DA SILVA MENESES", "iniciais": "EG"},
-        {"id": 8, "nome": "GUSTAVO CARVALHO SILVA", "iniciais": "GC"},
-        {"id": 9, "nome": "GUSTAVO GONÇALVES DE LIMA", "iniciais": "GG"},
-        {"id": 10, "nome": "ISABELLA NASCIMENTO MOURA", "iniciais": "IN"},
-        {"id": 11, "nome": "JOÃO VICTOR FRANCO SILVA CABRAL", "iniciais": "JV"},
-        {"id": 12, "nome": "JOCIENE RODRIGUES SILVA", "iniciais": "JR"},
-        {"id": 13, "nome": "JONATAS PEREIRA DA SILVA", "iniciais": "JP"},
-        {"id": 14, "nome": "JOYCE APARECIDA SILVA MORAES", "iniciais": "JA"},
-        {"id": 15, "nome": "KLEISLAINE SANTOS QUIRINO", "iniciais": "KS"},
-        {"id": 16, "nome": "KRISLLA MARA GOMES MAGALHÃES", "iniciais": "KM"},
-        {"id": 17, "nome": "LUAN BENÍCIO RIBEIRO DOS SANTOS", "iniciais": "LB"},
-        {"id": 18, "nome": "LUIS FELIPE DA ROCHA GUIMARAES", "iniciais": "LF"},
-        {"id": 19, "nome": "LUIS HENRIQUE DE MOURA SALES", "iniciais": "LH"},
-        {"id": 20, "nome": "MARCOS FELIPE PEREIRA DA SILVA", "iniciais": "MF"},
-        {"id": 21, "nome": "MARCOS VENÍCIUS DOS S. DAMASCENO", "iniciais": "MV"},
-        {"id": 22, "nome": "MARCOS VINICIUS MORAIS DE CARVALHO", "iniciais": "MV"},
-        {"id": 23, "nome": "MARIA CLARA DA SILVA RODRIGUES", "iniciais": "MC"},
-        {"id": 24, "nome": "MARIA EDUARDA OLIVEIRA MELO", "iniciais": "ME"},
-        {"id": 25, "nome": "MARIA LUIZA ALVES DE LIMA ARAÚJO", "iniciais": "ML"},
-        {"id": 26, "nome": "MARIA RUTH EMANUELLY SOUSA OLIVEIRA", "iniciais": "MR"},
-        {"id": 27, "nome": "MURILO CASTILHO PEREIRA LIMA", "iniciais": "MC"},
-        {"id": 28, "nome": "NARA RAYANNE LIMA DA SILVA", "iniciais": "NR"},
-        {"id": 29, "nome": "NICHOLAS MORONE DE OLIVEIRA MENEZES", "iniciais": "NM"},
-        {"id": 30, "nome": "PIETRA DOS SANTOS SILVA BORGES", "iniciais": "PD"},
-        {"id": 31, "nome": "RODRIGO DOS SANTOS NASCIMENTO", "iniciais": "RD"},
-        {"id": 32, "nome": "SOPHIA COSTA TORRES DA SILVA", "iniciais": "SC"},
-        {"id": 33, "nome": "VICTOR LEONEL DE PAULA SILVA", "iniciais": "VL"},
-        {"id": 34, "nome": "WALLASE SAMUEL DE SOUSA VELOSO", "iniciais": "WS"},
-        {"id": 35, "nome": "WELISSON DOS SANTOS GALDINO VIEIRA", "iniciais": "WD"},
-        {"id": 36, "nome": "YSADORA ALVES CAVALCANTE SOUSA", "iniciais": "YA"}
-      ]
-    },
-    {
-      "id": "1771430346296",
-      "nome": "201",
-      "alunos": [
-        {"id": 0, "nome": "AGLEIDSON DOS SANTOS LIMA", "iniciais": "AD"},
-        {"id": 1, "nome": "AMANDA LUCIANNY R. DA SILVA", "iniciais": "AL"},
-        {"id": 2, "nome": "ANA CAROLINE BRAGA DA SILVA CAETANO", "iniciais": "AC"},
-        {"id": 3, "nome": "ANTONIA LUANA DA SILVA REIS", "iniciais": "AL"},
-        {"id": 4, "nome": "BRUNA STEFHANNY LEAL PEREIRA", "iniciais": "BS"},
-        {"id": 5, "nome": "CÉSAR MACHADO OLIVEIRA SILVA", "iniciais": "CM"},
-        {"id": 6, "nome": "DANYLLY VIEIRA COSTA", "iniciais": "DV"},
-        {"id": 7, "nome": "DHEMYSON GOMES DE SOUSA", "iniciais": "DG"},
-        {"id": 8, "nome": "EDUARDO ALVES DOS SANTOS AZEVEDO", "iniciais": "EA"},
-        {"id": 9, "nome": "FRANCIELLI DA SILVA MENDES", "iniciais": "FD"},
-        {"id": 10, "nome": "GIOVANNA DOS SANTOS SOUSA", "iniciais": "GD"},
-        {"id": 11, "nome": "GUILHERME LEITE RIBEIRO", "iniciais": "GL"},
-        {"id": 12, "nome": "HUDSON LUIS DOS SANTOS SILVA", "iniciais": "HL"},
-        {"id": 13, "nome": "IZAMARA ARAÚJO CARDOSO", "iniciais": "IA"},
-        {"id": 14, "nome": "JOÃO GUILHERME SOUSA ALVES", "iniciais": "JG"},
-        {"id": 15, "nome": "JOYCE NASCIMENTO DA SILVA", "iniciais": "JN"},
-        {"id": 16, "nome": "LARA ISABELLY SILVA LIMA DE MOURA", "iniciais": "LI"},
-        {"id": 17, "nome": "LUCAS MEIRELES DOS SANTOS COSTA", "iniciais": "LM"},
-        {"id": 18, "nome": "LUDMILA REGIS DA SILVA", "iniciais": "LR"},
-        {"id": 19, "nome": "LYAN VICTOR SOUSA MESQUITA", "iniciais": "LV"},
-        {"id": 20, "nome": "MARIA BERNADETE DA SILVA CARVALHO", "iniciais": "MB"},
-        {"id": 21, "nome": "MOISÉS RODRIGUES HOLANDA", "iniciais": "MR"},
-        {"id": 22, "nome": "ODÁRIA RIBEIRO DE FRANÇA", "iniciais": "OR"},
-        {"id": 23, "nome": "PABLO MICHEL VIEIRA DA SILVA", "iniciais": "PM"},
-        {"id": 24, "nome": "PEDRO KERLLON VIEIRA DA SILVA", "iniciais": "PK"},
-        {"id": 25, "nome": "RAVENA THAÍS DO NASCIMENTO BEZERRA", "iniciais": "RT"},
-        {"id": 26, "nome": "RAYSSA TAYNA VIEIRA SANTOS", "iniciais": "RT"},
-        {"id": 27, "nome": "VIVIAN GABRYELLE M. DO CARVALHO", "iniciais": "VG"},
-        {"id": 28, "nome": "WILLYANS HENRIQUE DA SILVA LEITE", "iniciais": "WH"}
-      ]
-    },
-    {
-      "id": "1771430374731",
-      "nome": "202",
-      "alunos": [
-        {"id": 0, "nome": "ÁDYLLA PRICILIA VELOSO DE SOUSA", "iniciais": "ÁP"},
-        {"id": 1, "nome": "AMANDA DE SOUSA LIMA", "iniciais": "AD"},
-        {"id": 2, "nome": "ANA CLARA DE OLIVEIRA SANTOS PEREIRA", "iniciais": "AC"},
-        {"id": 3, "nome": "ANNA GABRIELLY DAMASCENO DE OLIVEIRA", "iniciais": "AG"},
-        {"id": 4, "nome": "ARTHUR RODRIGUES DAMAS", "iniciais": "AR"},
-        {"id": 5, "nome": "DAFNE RODRIGUES HOLANDA", "iniciais": "DR"},
-        {"id": 6, "nome": "DHEFFESON GOMES DE SOUSA", "iniciais": "DG"},
-        {"id": 7, "nome": "DIEGO SAMUEL DOS SANTOS MARQUES", "iniciais": "DS"},
-        {"id": 8, "nome": "ELLAYNY MARTINS PEREIRA", "iniciais": "EM"},
-        {"id": 9, "nome": "GEOVANNA KELLY PEREIRA DA COSTA", "iniciais": "GK"},
-        {"id": 10, "nome": "IASMYM PEREIRA PORTO", "iniciais": "IP"},
-        {"id": 11, "nome": "JOÃO EDUARDO ALMEIDA MUNIZ", "iniciais": "JE"},
-        {"id": 12, "nome": "JOÃO VICTOR SANTOS PEREIRA", "iniciais": "JV"},
-        {"id": 13, "nome": "JOÃO VITOR MEDEIROS REIS", "iniciais": "JV"},
-        {"id": 14, "nome": "LAVINEA VITORIA DE SOUSA RODRIGUES", "iniciais": "LV"},
-        {"id": 15, "nome": "LUCAS RODRIGUES BRUNO", "iniciais": "LR"},
-        {"id": 16, "nome": "LUIZ GUSTAVO ARAUJO MOURA", "iniciais": "LG"},
-        {"id": 17, "nome": "MARCYELLE APARECIDA DIAS ALENCAR", "iniciais": "MA"},
-        {"id": 18, "nome": "MARGARIDA ALVES GONÇALVES LIMA", "iniciais": "MA"},
-        {"id": 19, "nome": "MAYLLA BEATRIZ ARAÚJO REIS", "iniciais": "MB"},
-        {"id": 20, "nome": "NATANAEL FERREIRA DE CARVALHO", "iniciais": "NF"},
-        {"id": 21, "nome": "RAYLLA MARIA RODRIGUES BARBOSA", "iniciais": "RM"},
-        {"id": 22, "nome": "RAYNARA ALVES DE SOUSA", "iniciais": "RA"},
-        {"id": 23, "nome": "SARA ESTER SANTOS RIBEIRO", "iniciais": "SE"},
-        {"id": 24, "nome": "VALDEMIR EMANUEL FRANÇA SANTOS", "iniciais": "VE"},
-        {"id": 25, "nome": "VIVIANE VIEIRA DA SILVA", "iniciais": "VV"},
-        {"id": 26, "nome": "WISLEM PEREIRA BRITO", "iniciais": "WP"}
-      ]
-    }
-  ],
-  "atividades": [],
-  "entregas": []
-}
+    <div id="modal" class="modal hidden" onclick="if(event.target===this)fecharModal()">
+        <div class="modal-content">
+            <span onclick="fecharModal()" style="float:right;font-size:28px;cursor:pointer">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
 
-print("Dados carregados com sucesso!")
-print(f"Total de turmas: {len(data['turmas'])}")
-print(f"Total de alunos: {sum(len(t['alunos']) for t in data['turmas'])}")
+    <script>
+        const DADOS_EMBUTIDOS = {"turmas":[{"id":"1771429568776","nome":"101","alunos":[{"id":0,"nome":"ACKSON MIGUEL MACÊDO DE SOUSA","iniciais":"AM"},{"id":1,"nome":"ANA LIVIA CAVALCANTE DE MELO","iniciais":"AL"},{"id":2,"nome":"ANNA VICTHORIA BEZERRA DE SOUZA","iniciais":"AV"},{"id":3,"nome":"ANTONIO OLIVEIRA DE SOUZA","iniciais":"AO"},{"id":4,"nome":"ARTHUR CARVALHO DOS SANTOS","iniciais":"AC"},{"id":5,"nome":"CAUÃ VICTOR FERNANDES SALES","iniciais":"CV"},{"id":6,"nome":"DENISE DUARTE DE SOUSA","iniciais":"DD"},{"id":7,"nome":"ELLOAH VICTORIA DE CARVALH","iniciais":"EV"},{"id":8,"nome":"EMERSON BATISTA ALVES","iniciais":"EB"},{"id":9,"nome":"EMILLY VITÓRIA DE SOUSA GONÇALVES","iniciais":"EV"},{"id":10,"nome":"FRANCISCO BARROS DE MORAIS","iniciais":"FB"},{"id":11,"nome":"GRAZIELLA GOMES COSTA MENESES","iniciais":"GG"},{"id":12,"nome":"GUILHERME OLIVEIRA DA SILVA","iniciais":"GO"},{"id":13,"nome":"HUAM EMMANUELL INÁCIO FELIX MACEDO","iniciais":"HE"},{"id":14,"nome":"ICARO FERNANDES DE SOUZA SANTOS","iniciais":"IF"},{"id":15,"nome":"ISABELA CASTRO MEDEIROS","iniciais":"IC"},{"id":16,"nome":"ISABELLA LARANGEIRA RODRIGUES","iniciais":"IL"},{"id":17,"nome":"JOSÉ DANIEL DE OLIVEIRA PAZ","iniciais":"JD"},{"id":18,"nome":"JOYCE NIKELLY SILVA SOUSA","iniciais":"JN"},{"id":19,"nome":"JUAN LUCAS DA SILVA GOMES","iniciais":"JL"},{"id":20,"nome":"KASSIANO PACHECO DO NASCIMENTO","iniciais":"KP"},{"id":21,"nome":"KAYLA GABRYELE DA SILVA REIS","iniciais":"KG"},{"id":22,"nome":"LAIS PEREIRA DA SILVA","iniciais":"LP"},{"id":23,"nome":"LUCYANNA GABRYELLY R.DOS S. SILVA","iniciais":"LG"},{"id":24,"nome":"LUIZ FILIPE FERREIRA BATISTA","iniciais":"LF"},{"id":25,"nome":"MARIA CLARA DA SILVA RODRIGUES","iniciais":"MC"},{"id":26,"nome":"MARIA CLARA DE SOUZA MACEDO","iniciais":"MC"},{"id":27,"nome":"MARIA CLARA MENDES VIEIRA R. DA SILVA","iniciais":"MC"},{"id":28,"nome":"MARIA EDUARDA FEITOSA SILVA","iniciais":"ME"},{"id":29,"nome":"MIRELLY CRISTINNY DO N. OLIVEIRA","iniciais":"MC"},{"id":30,"nome":"NYLMARA NYCOLY ALVES DE SOUSA","iniciais":"NN"},{"id":31,"nome":"PEDRO MORAES DE CARVALHO JUNIOR","iniciais":"PM"},{"id":32,"nome":"SAYURE VICTORIA COSTA LEAL","iniciais":"SV"}]},{"id":"1771429747670","nome":"102","alunos":[{"id":0,"nome":"ALANNA DIAS MUNIZ MORAES","iniciais":"AD"},{"id":1,"nome":"ANA CLARA DE SOUSA CASTRO","iniciais":"AC"},{"id":2,"nome":"ANDRE ALVES DE SOUSA","iniciais":"AA"},{"id":3,"nome":"DAVI EMANUEL ROCHA CASTRO","iniciais":"DE"},{"id":4,"nome":"DOUGLAS DE SOUZA SILVA","iniciais":"DD"},{"id":5,"nome":"EMILY YASMIM FERREIRA SALES","iniciais":"EY"},{"id":6,"nome":"FABRICIA DOS SANTOS NASCIMENTO","iniciais":"FD"},{"id":7,"nome":"IAGO DA SILVA SOUZA","iniciais":"ID"},{"id":8,"nome":"ILLA RAVENNA MARTINS SOARES","iniciais":"IR"},{"id":9,"nome":"ISABELA DE OLIVEIRA SILVA DA ROCHA","iniciais":"ID"},{"id":10,"nome":"JOSÉ GABRIEL CASSEMIRO ALMEIDA","iniciais":"JG"},{"id":11,"nome":"KÁREN JOKAS SANTANA RODRIGUES","iniciais":"KJ"},{"id":12,"nome":"KAWANE IZABELA VELOZO VIANA","iniciais":"KI"},{"id":13,"nome":"KAYKE OLIVEIRA BARBOSA","iniciais":"KO"},{"id":14,"nome":"LUIS EDUARDO DIAS OLIVEIRA","iniciais":"LE"},{"id":15,"nome":"MARIA CLARA AVELINO SIQUEIRA","iniciais":"MC"},{"id":16,"nome":"MARIA CLARA DE OLIVEIRA SOUZA","iniciais":"MC"},{"id":17,"nome":"MARIA EDUARDA DE OLIVEIRA SOUZA","iniciais":"ME"},{"id":18,"nome":"MARIA EDUARDA RODRIGUES DOS SANTOS","iniciais":"ME"},{"id":19,"nome":"MIRYAN AVELINO DO NASCIMENTO","iniciais":"MA"},{"id":20,"nome":"MOISÉS SARAIVA DA SILVA PENHA","iniciais":"MS"},{"id":21,"nome":"NYCOLAS DA SILVA LASEVICIUS","iniciais":"ND"},{"id":22,"nome":"PEDRO VICTOR DE SOUSA LOPES","iniciais":"PV"},{"id":23,"nome":"RAQUEL FERREIRA COSTA","iniciais":"RF"},{"id":24,"nome":"RIANNY GABRIELLY DA SILVA FEITOSA","iniciais":"RG"},{"id":25,"nome":"SAMILA NICOLE MARCELINO ALVES","iniciais":"SN"},{"id":26,"nome":"SANDRYELSON SILVA DE AZEVEDO","iniciais":"SS"},{"id":27,"nome":"SAUL JHONATAS DA SILVA OLIVEIRA","iniciais":"SJ"},{"id":28,"nome":"TALISSON VICTOR M. DOS S. OLIVEIRA","iniciais":"TV"},{"id":29,"nome":"THAYNÁ MARIA SOUSA SILVA","iniciais":"TM"},{"id":30,"nome":"THAYNARA DE JESUS SANTANA DA SILVA","iniciais":"TD"},{"id":31,"nome":"YSABELLA FELLÍCYA ARAÚJO SOUSA","iniciais":"YF"}]}],"atividades":[],"entregas":[]};
+        
+        const SENHA_PROFESSOR = "fred2026";
+        let modoAtual = null;
+        let dados = {turmas:[],atividades:[],entregas:[]};
+        
+        function carregarDados() {
+            dados = JSON.parse(JSON.stringify(DADOS_EMBUTIDOS));
+            let salvos = localStorage.getItem('eduflow_dados');
+            if(salvos) {
+                let d = JSON.parse(salvos);
+                if(d.atividades) dados.atividades = d.atividades;
+                if(d.entregas) dados.entregas = d.entregas;
+            }
+            atualizarStats();
+        }
+        
+        function salvarDados() { localStorage.setItem('eduflow_dados',JSON.stringify(dados)); }
+        
+        function selecionarModo(modo,el) {
+            modoAtual = modo;
+            document.querySelectorAll('.mode-option').forEach(e=>e.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('senha-section').classList.toggle('hidden',modo!=='professor');
+            if(modo==='aluno') setTimeout(mostrarDashboard,300);
+        }
+        
+        function verificarSenha() {
+            if(document.getElementById('senha-input').value===SENHA_PROFESSOR) mostrarDashboard();
+            else { document.getElementById('senha-erro').style.display='block'; setTimeout(()=>document.getElementById('senha-erro').style.display='none',3000); }
+        }
+        
+        function mostrarDashboard() {
+            document.getElementById('tela-login').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('modo-atual').textContent = modoAtual==='professor'?'👨‍🏫 Professor':'👨‍🎓 Aluno';
+            mostrarTurmas();
+        }
+        
+        function atualizarStats() {
+            document.getElementById('total-turmas').textContent=dados.turmas.length;
+            document.getElementById('total-alunos').textContent=dados.turmas.reduce((a,t)=>a+(t.alunos?t.alunos.length:0),0);
+            document.getElementById('total-atividades').textContent=dados.atividades.length;
+        }
+        
+        function mostrarTurmas() {
+            let html='<div class="card"><h2 style="margin-bottom:20px">Turmas</h2><div class="grid">';
+            dados.turmas.forEach(t=>{
+                html+=`<div class="turma-card" onclick="verTurma('${t.id}')"><h3>Turma ${t.nome}</h3><p>${t.alunos?t.alunos.length:0} alunos</p></div>`;
+            });
+            html+='</div></div>';
+            document.getElementById('conteudo').innerHTML=html;
+        }
+        
+        function verTurma(id) {
+            let t=dados.turmas.find(x=>x.id===id);
+            if(!t)return;
+            let html=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2>Turma ${t.nome}</h2><button class="btn-primary" onclick="mostrarTurmas()">← Voltar</button></div>`;
+            if(t.alunos&&t.alunos.length) {
+                html+='<table><thead><tr><th>Nome</th><th>Iniciais</th></tr></thead><tbody>';
+                t.alunos.forEach(a=>html+=`<tr><td>${a.nome}</td><td>${a.iniciais}</td></tr>`);
+                html+='</tbody></table>';
+            } else html+='<p>Nenhum aluno</p>';
+            html+='</div>';
+            document.getElementById('conteudo').innerHTML=html;
+        }
+        
+        function mostrarAtividades() {
+            let html='<div class="card"><h2>Atividades</h2>';
+            if(!dados.atividades.length) html+='<p>Nenhuma atividade</p>';
+            else {
+                html+='<div class="grid">';
+                dados.atividades.forEach(a=>{
+                    let turma=dados.turmas.find(x=>x.id===a.turmaId);
+                    html+=`<div class="turma-card" onclick="verAtividade('${a.id}')"><h3>${a.titulo}</h3><p>Turma: ${turma?turma.nome:'N/A'}</p></div>`;
+                });
+                html+='</div>';
+            }
+            if(modoAtual==='professor') html+='<button class="btn-success" onclick="criarAtividade()" style="margin-top:20px">+ Nova Atividade</button>';
+            html+='</div>';
+            document.getElementById('conteudo').innerHTML=html;
+        }
+        
+        function criarAtividade() {
+            let html=`<h3>Nova Atividade</h3><input id="titulo" placeholder="Título"><textarea id="desc" placeholder="Descrição" rows="3"></textarea><select id="turma">`;
+            dados.turmas.forEach(t=>html+=`<option value="${t.id}">Turma ${t.nome}</option>`);
+            html+=`</select><button class="btn-success" onclick="salvarAtividade()">Salvar</button>`;
+            document.getElementById('modal-body').innerHTML=html;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        function salvarAtividade() {
+            let a={
+                id:Date.now().toString(),
+                titulo:document.getElementById('titulo').value,
+                descricao:document.getElementById('desc').value,
+                turmaId:document.getElementById('turma').value
+            };
+            dados.atividades.push(a);
+            salvarDados();
+            atualizarStats();
+            fecharModal();
+            mostrarAtividades();
+        }
+        
+        function verAtividade(id) {
+            let a=dados.atividades.find(x=>x.id===id);
+            let turma=dados.turmas.find(x=>x.id===a.turmaId);
+            let html=`<h2>${a.titulo}</h2><p><strong>Turma:</strong> ${turma?turma.nome:'N/A'}</p><p>${a.descricao}</p>`;
+            if(modoAtual==='aluno'&&turma) {
+                html+=`<h3 style="margin-top:20px">Enviar Resposta</h3><select id="aluno"><option value="">Selecione seu nome</option>`;
+                turma.alunos.forEach((x,i)=>html+=`<option value="${i}">${x.nome}</option>`);
+                html+=`</select><textarea id="resp" rows="3" placeholder="Sua resposta"></textarea><button class="btn-success" onclick="enviarResposta('${id}')">Enviar</button>`;
+            }
+            document.getElementById('modal-body').innerHTML=html;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        function enviarResposta(id) {
+            let alunoId=document.getElementById('aluno').value;
+            let resp=document.getElementById('resp').value;
+            if(!alunoId||!resp.trim()){alert('Preencha todos os campos!');return;}
+            dados.entregas.push({id:Date.now().toString(),atividadeId:id,alunoId:parseInt(alunoId),resposta:resp,data:new Date().toISOString()});
+            salvarDados();
+            fecharModal();
+            alert('Enviado com sucesso!');
+        }
+        
+        function exportarDados() {
+            let blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
+            let url=URL.createObjectURL(blob);
+            let a=document.createElement('a');
+            a.href=url;
+            a.download='eduflow_backup_'+new Date().toISOString().split('T')[0]+'.json';
+            a.click();
+        }
+        
+        function fecharModal(){document.getElementById('modal').classList.add('hidden');}
+        function sair(){location.reload();}
+        
+        document.addEventListener('DOMContentLoaded',carregarDados);
+    </script>
+</body>
+</html>
